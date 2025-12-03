@@ -1,0 +1,15 @@
+[package]
+name = "aoc2025"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3
+
+[dev-dependencies]
