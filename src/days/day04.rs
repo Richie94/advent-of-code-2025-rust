@@ -1,5 +1,4 @@
 use anyhow::Result;
-use std::collections::{HashMap, HashSet};
 
 pub fn part1(input: &str) -> Result<i64> {
     Ok(parse_numbers(input, false))
@@ -10,66 +9,78 @@ pub fn part2(input: &str) -> Result<i64> {
 }
 
 fn parse_numbers(input: &str, part2: bool) -> i64 {
-    // we have a 2d grid of . for empty and @ for filled
-    // we count for every @ if there are more than 4 adjacent @
     let lines: Vec<&str> = input.lines().collect();
     let height = lines.len();
-    let width = lines[0].len();
-    let mut new_removable: HashSet<(isize, isize)> = HashSet::new();
-    // use a hashmap to store removable positions
-    let mut removable: HashSet<(isize, isize)> = HashSet::new();
-    let mut grid: HashMap<(isize, isize), char> = HashMap::new();
-    for y in 0..height {
-        for x in 0..width {
-            let value = lines[y].chars().nth(x).unwrap_or('.');
-            if value == '.' {
-                continue;
+    let width = lines.first().map(|l| l.len()).unwrap_or(0);
+
+    // Use a flat Vec<bool>
+    // true = '@', false = '.' or removed.
+    let mut grid = vec![false; width * height];
+
+    for (y, line) in lines.iter().enumerate() {
+        for (x, b) in line.bytes().enumerate() {
+            if b == b'@' {
+                grid[y * width + x] = true;
             }
-            grid.insert((x as isize, y as isize), value);
         }
     }
+
+    let mut total_removed = 0;
+    // Reusable buffer to store indices to remove in the current step
+    let mut to_remove = Vec::with_capacity(128);
+
     loop {
-        for entry in grid.iter() {
-            let (x, y) = entry.0;
-            if removable.contains(&entry.0) {
-                continue;
-            }
-            let mut adjacent = 0;
-            for dy in -1..=1 {
-                for dx in -1..=1 {
-                    if dy == 0 && dx == 0 {
-                        continue;
-                    }
-                    let ny = y + dy;
-                    let nx = x + dx;
-                    let next_key = (nx, ny);
+        for y in 0..height {
+            for x in 0..width {
+                let idx = y * width + x;
 
-                    if removable.contains(&next_key) {
-                        continue;
-                    }
+                // Skip if empty or already removed
+                if !grid[idx] {
+                    continue;
+                }
 
-                    if grid.get(&next_key).unwrap_or(&'.') == &'@' {
-                        adjacent += 1;
+                let mut adjacent = 0;
+
+                // Manual neighbor check with boundary guards
+                for dy in -1..=1 {
+                    for dx in -1..=1 {
+                        if dy == 0 && dx == 0 {
+                            continue;
+                        }
+
+                        let ny = y as isize + dy;
+                        let nx = x as isize + dx;
+
+                        if ny >= 0 && ny < height as isize && nx >= 0 && nx < width as isize {
+                            if grid[ny as usize * width + nx as usize] {
+                                adjacent += 1;
+                            }
+                        }
                     }
                 }
-            }
-            if adjacent < 4 {
-                new_removable.insert(*entry.0);
+
+                if adjacent < 4 {
+                    to_remove.push(idx);
+                }
             }
         }
 
-        println!("New removable: {:?}, total removable {}", new_removable.len(), removable.len() + new_removable.len());
-
-        if new_removable.is_empty() {
-            return removable.len() as i64;
+        if to_remove.is_empty() {
+            return total_removed;
         }
-        new_removable.iter().for_each(|k| {
-            removable.insert(*k);
-        });
-        new_removable.clear();
+
+        total_removed += to_remove.len() as i64;
+
+        // Apply changes
+        for &idx in &to_remove {
+            grid[idx] = false;
+        }
+
+        // Clear buffer for next iteration without deallocating memory
+        to_remove.clear();
 
         if !part2 {
-            return removable.len() as i64;
+            return total_removed;
         }
     }
 }
