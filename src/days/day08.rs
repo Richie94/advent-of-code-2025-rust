@@ -1,15 +1,15 @@
 use anyhow::Result;
 use std::collections::HashMap;
 
-pub fn part1(input: &str, example: bool) -> Result<i64> {
-    Ok(parse_numbers(input, false, example))
+pub fn part1(input: &str) -> Result<i64> {
+    Ok(parse_numbers(input, false))
 }
 
-pub fn part2(input: &str, example: bool) -> Result<i64> {
-    Ok(parse_numbers(input, true, example))
+pub fn part2(input: &str) -> Result<i64> {
+    Ok(parse_numbers(input, true))
 }
 
-fn parse_numbers(input: &str, part2: bool, example: bool) -> i64 {
+fn parse_numbers(input: &str, part2: bool) -> i64 {
     // parse the list of 3-d coordinates
     let points: Vec<(i64, i64, i64)> = input
         .lines()
@@ -43,7 +43,7 @@ fn parse_numbers(input: &str, part2: bool, example: bool) -> i64 {
     let mut groups: HashMap<usize, Vec<(i64, i64, i64)>> = HashMap::new();
     let mut next_group_id = 0;
 
-    let iterations = if example { 10 } else { 1000 };
+    let iterations = if points.len() < 100 { 10 } else { 1000 };
     let mut iter = 0;
 
     for (min_point_a, min_point_b, _) in distances {
@@ -112,36 +112,37 @@ mod tests {
     const INPUT_ANSWER_PART1: i64 = 153328;
     const EXAMPLE_ANSWER_PART2: i64 = 25272;
     const INPUT_ANSWER_PART2: i64 = 6095621910;
+    const DAY: &str = "day08";
 
     #[test]
     fn example_part1() {
-        let path = repo_path(&["inputs", "day08", "example.txt"]);
+        let path = repo_path(&["inputs", DAY, "example.txt"]);
         let input = fs::read_to_string(path).expect("missing example file");
-        let ans = part1(&input, true).unwrap();
+        let ans = part1(&input).unwrap();
         assert_eq!(ans, EXAMPLE_ANSWER_PART1);
     }
 
     #[test]
     fn input_part1() {
-        let path = repo_path(&["inputs", "day08", "input.txt"]);
+        let path = repo_path(&["inputs", DAY, "input.txt"]);
         let input = fs::read_to_string(path).expect("missing example file");
-        let ans = part1(&input, false).unwrap();
+        let ans = part1(&input).unwrap();
         assert_eq!(ans, INPUT_ANSWER_PART1);
     }
 
     #[test]
     fn example_part2() {
-        let path = repo_path(&["inputs", "day08", "example.txt"]);
+        let path = repo_path(&["inputs", DAY, "example.txt"]);
         let input = fs::read_to_string(path).expect("missing example file");
-        let ans = part2(&input, true).unwrap();
+        let ans = part2(&input).unwrap();
         assert_eq!(ans, EXAMPLE_ANSWER_PART2);
     }
 
     #[test]
     fn input_part2() {
-        let path = repo_path(&["inputs", "day08", "input.txt"]);
+        let path = repo_path(&["inputs", DAY, "input.txt"]);
         let input = fs::read_to_string(path).expect("missing example file");
-        let ans = part2(&input, false).unwrap();
+        let ans = part2(&input).unwrap();
         assert_eq!(ans, INPUT_ANSWER_PART2);
     }
 }

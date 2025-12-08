@@ -9,6 +9,6 @@ fn main() -> Result<()> {
     let elapsed = now.elapsed();
     let p2 = day05::part2(&input)?;
     let elapsed2 = now.elapsed();
-    println!("Day 04\n  Part 1: {p1} in {:?}\n  Part 2: {p2} {:?}", elapsed, elapsed2);
+    println!("Day 05\n  Part 1: {p1} in {:?}\n  Part 2: {p2} {:?}", elapsed, elapsed2);
     Ok(())
 }
