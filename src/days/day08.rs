@@ -1,4 +1,5 @@
 use anyhow::Result;
+use std::collections::HashMap;
 
 pub fn part1(input: &str, example: bool) -> Result<i64> {
     Ok(parse_numbers(input, false, example))
@@ -38,72 +39,62 @@ fn parse_numbers(input: &str, part2: bool, example: bool) -> i64 {
     // sort distances by distance
     distances.sort_by(|a, b| a.2.cmp(&b.2));
 
-    let mut groups: Vec<Vec<(i64, i64, i64)>> = vec![];
+    let mut point_to_group: HashMap<(i64, i64, i64), usize> = HashMap::new();
+    let mut groups: HashMap<usize, Vec<(i64, i64, i64)>> = HashMap::new();
+    let mut next_group_id = 0;
+
     let iterations = if example { 10 } else { 1000 };
-    // check for the minimal distance in distances
     let mut iter = 0;
-    loop {
+
+    for (min_point_a, min_point_b, _) in distances {
         if !part2 && iter >= iterations {
             break;
         }
         iter += 1;
-        let (min_point_a, min_point_b, _min_distance) = distances[0];
 
-        // remove this distance from the list
-        distances.remove(0);
+        let a_group = point_to_group.get(&min_point_a).copied();
+        let b_group = point_to_group.get(&min_point_b).copied();
 
-        // check if point_a is already in a group
-        let mut contained_in_groups: Vec<usize> = vec![];
-        for (index, group) in groups.iter().enumerate() {
-            if group.contains(&min_point_a) || group.contains(&min_point_b) {
-                contained_in_groups.push(index);
+        match (a_group, b_group) {
+            (None, None) => {
+                let id = next_group_id;
+                next_group_id += 1;
+                point_to_group.insert(min_point_a, id);
+                point_to_group.insert(min_point_b, id);
+                groups.insert(id, vec![min_point_a, min_point_b]);
             }
-        }
-        if contained_in_groups.len() == 0 {
-            // create a new group
-            groups.push(vec![min_point_a, min_point_b]);
-        } else if contained_in_groups.len() == 1 {
-            // add both points to the existing group
-            let group_index = contained_in_groups[0];
-            if !groups[group_index].contains(&min_point_a) {
-                groups[group_index].push(min_point_a);
+            (Some(id), None) => {
+                point_to_group.insert(min_point_b, id);
+                groups.get_mut(&id).unwrap().push(min_point_b);
             }
-            if !groups[group_index].contains(&min_point_b) {
-                groups[group_index].push(min_point_b);
+            (None, Some(id)) => {
+                point_to_group.insert(min_point_a, id);
+                groups.get_mut(&id).unwrap().push(min_point_a);
             }
-        } else {
-            // merge all groups
-            let mut new_group: Vec<(i64, i64, i64)> = vec![];
-            for group_index in contained_in_groups.iter() {
-                let group = &groups[*group_index];
-                for point in group.iter() {
-                    if !new_group.contains(point) {
-                        new_group.push(*point);
+            (Some(id_a), Some(id_b)) if id_a != id_b => {
+                // Merge groups: move all from b to a
+                if let Some(members_b) = groups.remove(&id_b) {
+                    let group_a_vec = groups.get_mut(&id_a).unwrap();
+                    for point in members_b {
+                        point_to_group.insert(point, id_a);
+                        group_a_vec.push(point);
                     }
                 }
-                // remove the old group
             }
-            for group_index in contained_in_groups.iter().rev() {
-                groups.remove(*group_index);
-            }
-            // add the two points
-            if !new_group.contains(&min_point_a) {
-                new_group.push(min_point_a);
-            }
-            if !new_group.contains(&min_point_b) {
-                new_group.push(min_point_b);
-            }
-            groups.push(new_group);
+            _ => {} // Already in the same group
         }
 
-        if part2 && groups[0].len() == points.len() {
-            return min_point_a.0 * min_point_b.0;
+        if part2 {
+            // If we have only one group left and it contains all points, we are done
+            if groups.len() == 1 && groups.values().next().unwrap().len() == points.len() {
+                return min_point_a.0 * min_point_b.0;
+            }
         }
     }
-
     // find the 3 largest groups
-    groups.sort_by(|a, b| b.len().cmp(&a.len()));
-    let largest_groups = &groups[..3.min(groups.len())];
+    let mut result_groups: Vec<&Vec<(i64, i64, i64)>> = groups.values().collect();
+    result_groups.sort_by(|a, b| b.len().cmp(&a.len()));
+    let largest_groups = &result_groups[..3.min(result_groups.len())];
     let mut result: i64 = 1;
     for group in largest_groups {
         result *= group.len() as i64;
