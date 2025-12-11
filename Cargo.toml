@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1"
+good_lp = "1.14.2"
 
 [profile.dev]
 opt-level = 0
