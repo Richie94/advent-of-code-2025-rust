@@ -27,7 +27,6 @@ fn parse_numbers(input: &str, part2: bool) -> i64 {
 
         // Determine Targets and Variable Constraints based on Part
         let targets: Vec<f64>;
-        let max_presses: f64;
 
         if !part2 {
             // Part 1: Target is the pattern itself [.##.] -> [0, 1, 1, 0]
@@ -36,7 +35,6 @@ fn parse_numbers(input: &str, part2: bool) -> i64 {
             targets = pattern.chars()
                 .map(|c| if c == '#' { 1.0 } else { 0.0 })
                 .collect();
-            max_presses = 1.0;
         } else {
             // Part 2: Target is the number list {55, 38...}
             // Constraint: Unlimited presses
@@ -46,7 +44,6 @@ fn parse_numbers(input: &str, part2: bool) -> i64 {
                 .filter(|s| !s.is_empty())
                 .map(|s| s.parse().unwrap())
                 .collect();
-            max_presses = f64::INFINITY;
         }
 
         // --- ILP SOLVER ---
